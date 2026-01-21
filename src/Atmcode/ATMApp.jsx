@@ -7,14 +7,13 @@ export default function ATMApp() {
   const [view, setView] = useState('login');
   const [account, setAccount] = useState('');
   const [pin, setPin] = useState('');
-  const [balance, setBalance] = useState(null);
+  const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [amount, setAmount] = useState('');
   const [toAccount, setToAccount] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [initialBalance, setInitialBalance] = useState('');
-
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
@@ -52,8 +51,6 @@ export default function ATMApp() {
     }
   };
 
-
-
   const handleSignup = async () => {
     try {
       const res = await fetch(`${API_BASE}/accounts`, {
@@ -87,7 +84,23 @@ export default function ATMApp() {
     }
   };
 
+  const fetchBalance = async () => {
+    const res = await fetch(
+      `${API_BASE}/accounts/${account}/balance`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      }
+    );
 
+    if (!res.ok) {
+      throw new Error('Failed to fetch balance');
+    }
+
+    const bal = await res.json();
+    setBalance(Number(bal));
+  };
 
   const handleDeposit = async () => {
     try {
@@ -105,16 +118,8 @@ export default function ATMApp() {
         throw new Error(err || 'Deposit failed');
       }
 
-      const data = await res.json();
-
-      // ✅ Extract balance from Transaction object
-      const newBalance = Number(data.account.balance);
-
-      if (Number.isNaN(newBalance)) {
-        throw new Error('Invalid balance received from server');
-      }
-
-      setBalance(newBalance);
+      // ✅ SAFE balance refresh
+      await fetchBalance();
 
       showMessage('success', `Deposited ₹${amount} successfully!`);
       setAmount('');
@@ -132,29 +137,22 @@ export default function ATMApp() {
         `${API_BASE}/accounts/${account}/withdraw`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            pin: pin,
+            pin,
             amount: Number(amount)
           })
         }
       );
 
-      const data = await res.json();
-
       if (!res.ok) {
+        const data = await res.json();
         throw new Error(data.message || 'Withdrawal failed');
       }
 
-      const newBalance = Number(data.account.balance);
+      // ✅ SAFE balance refresh
+      await fetchBalance();
 
-      if (Number.isNaN(newBalance)) {
-        throw new Error('Invalid balance received');
-      }
-
-      setBalance(newBalance);
       showMessage('success', `Withdrew ₹${amount} successfully!`);
       setAmount('');
       setView('menu');
@@ -169,16 +167,14 @@ export default function ATMApp() {
     // clear sensitive state
     setAccount('');
     setPin('');
-    setBalance(null);
+    setBalance(0);
     setTransactions([]);
     setAmount('');
     setToAccount('');
     setMessage({ type: '', text: '' });
-
     // go back to login screen
     setView('login');
   };
-
 
   const handleTransfer = async () => {
     try {
@@ -203,10 +199,7 @@ export default function ATMApp() {
       }
 
       // normalize BigDecimal → JS number
-      const newBalance = Number(data?.balance ?? data?.account?.balance);
-
-      setBalance(Number.isFinite(newBalance) ? newBalance : 0);
-
+      await fetchBalance();
       showMessage('success', `Transferred ₹${amount} successfully!`);
       setAmount('');
       setToAccount('');
@@ -363,13 +356,14 @@ export default function ATMApp() {
             </div>
           )}
 
-
-
           {view === 'menu' && (
             <div className="space-y-4">
               <div className="bg-blue-50 p-4 rounded-lg mb-6">
                 <p className="text-sm text-gray-600">Current Balance</p>
-                <p className="text-3xl font-bold text-blue-600">${balance?.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-blue-600">
+                  ${Number.isFinite(balance) ? balance.toFixed(2) : '0.00'}
+                </p>
+
               </div>
 
               <button
