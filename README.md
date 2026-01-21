@@ -1,17 +1,66 @@
-# React + Vite
+🏧 ATM Application – Backend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is a backend implementation of an ATM system developed using Java and Spring Boot, following modern backend development practices. The application provides core banking functionalities such as account creation, secure login, balance inquiry, deposits, withdrawals, fund transfers, and transaction history.
 
-Currently, two official plugins are available:
+Initially, this project was implemented using JDBC, and later refactored and upgraded to Spring Boot using Spring Data JPA and Hibernate for better scalability, maintainability, and cleaner architecture.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## React Compiler
+🚀 Technologies Used
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Java
+Spring Boot
+Spring Data JPA
+Hibernate (ORM)
+SQL (MySQL-compatible database)
+RESTful APIs
+Session-based authentication
+Maven
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-# AtmApplication-Frontend
+🗄️ Database & Deployment
+
+Database: SQL database hosted on Aiven
+Backend Deployment: Deployed on Render
+ORM: Hibernate with JPA for database interaction
+The application uses JPA repositories instead of raw SQL queries, making database operations more efficient and readable.
+
+
+🔐 Authentication & Security
+
+Session-based login mechanism
+PIN verification for every sensitive operation
+Secure validation for deposits, withdrawals, transfers, and transaction access
+
+
+⚙️ Features
+
+Create new bank accounts
+Secure login using account number and PIN
+Check account balance
+Deposit money
+Withdraw money
+Transfer money between accounts
+View transaction history (sorted by latest transactions)
+Proper exception handling and validation
+
+
+🧠 Learning & Improvements
+
+Migrated from JDBC to Spring Boot + JPA
+Improved code structure using layered architecture (Controller, Service, Repository)
+Reduced boilerplate code using Hibernate ORM
+Enhanced scalability and deployment using cloud services
+
+
+📦 Project Structure
+
+controller  → REST API endpoints  
+service     → Business logic  
+repository  → JPA repositories  
+entity      → Database entities  
+exception   → Custom exception handling  
+
+
+🌐 Live Backend
+
+The backend service is live and deployed on Render, with the database securely hosted on Aiven.
