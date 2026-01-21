@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AlertCircle, DollarSign, CreditCard, History, ArrowRightLeft } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8080/api/atm';
+const API_BASE = 'https://atmapplication-backend.onrender.com/api/atm';
 
 export default function ATMApp() {
   const [view, setView] = useState('login');
@@ -12,80 +12,142 @@ export default function ATMApp() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [amount, setAmount] = useState('');
   const [toAccount, setToAccount] = useState('');
+  const [ownerName, setOwnerName] = useState('');
+ const [initialBalance, setInitialBalance] = useState('');
+
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
     setTimeout(() => setMessage({ type: '', text: '' }), 5000);
   };
 
-  const handleLogin = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/accounts/${account}/balance?pin=${pin}`);
-      const data = await res.json();
-      if (res.ok) {
-        setBalance(data);
-        setView('menu');
-        showMessage('success', 'Login successful!');
-      } else {
-        showMessage('error', data.message || 'Invalid credentials');
-      }
-    } catch (err) {
-      showMessage('error', 'Connection error. Please try again.');
-    }
-  };
-
-  const handleDeposit = async () => {
+ const handleLogin = async () => {
   try {
-    const res = await fetch(`${API_BASE}/accounts/${account}/deposit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        pin,
-        amount: Number(amount)
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err || 'Deposit failed');
-    }
+    const res = await fetch(
+      `${API_BASE}/accounts/${account}/balance`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          pin: pin
+        })
+      }
+    );
 
     const data = await res.json();
 
-    // ✅ Extract balance from Transaction object
-    const newBalance = Number(data.account.balance);
-
-    if (Number.isNaN(newBalance)) {
-      throw new Error('Invalid balance received from server');
+    if (!res.ok) {
+      throw new Error(data.message || 'Invalid credentials');
     }
 
-    setBalance(newBalance);
-
-    showMessage('success', `Deposited ₹${amount} successfully!`);
-    setAmount('');
+    setBalance(Number(data));
     setView('menu');
+    showMessage('success', 'Login successful!');
 
   } catch (err) {
     console.error(err);
-    showMessage('error', err.message || 'Transaction failed');
+    showMessage('error', err.message || 'Connection error');
   }
 };
 
-const handleWithdraw = async () => {
-  try {
-    const res = await fetch(
-      `${API_BASE}/accounts/${account}/withdraw?pin=${pin}&amount=${Number(amount)}`,
-      { method: 'POST' }
-    );
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err || 'Withdrawal failed');
-    }
+
+  const handleSignup = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/accounts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        accountNumber: account,
+        ownerName: ownerName,
+        pin: pin,
+        initialBalance: Number(initialBalance)
+      })
+    });
 
     const data = await res.json();
 
-    // ✅ Extract balance correctly
+    if (!res.ok) {
+      throw new Error(data.message || 'Signup failed');
+    }
+
+    showMessage('success', 'Account created successfully! Please login.');
+    setView('login');
+
+    // cleanup
+    setAccount('');
+    setOwnerName('');
+    setPin('');
+    setInitialBalance('');
+
+  } catch (err) {
+    showMessage('error', err.message);
+  }
+};
+
+
+
+  const handleDeposit = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/accounts/${account}/deposit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pin,
+          amount: Number(amount)
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || 'Deposit failed');
+      }
+
+      const data = await res.json();
+
+      // ✅ Extract balance from Transaction object
+      const newBalance = Number(data.account.balance);
+
+      if (Number.isNaN(newBalance)) {
+        throw new Error('Invalid balance received from server');
+      }
+
+      setBalance(newBalance);
+
+      showMessage('success', `Deposited ₹${amount} successfully!`);
+      setAmount('');
+      setView('menu');
+
+    } catch (err) {
+      console.error(err);
+      showMessage('error', err.message || 'Transaction failed');
+    }
+  };
+
+  const handleWithdraw = async () => {
+  try {
+    const res = await fetch(
+      `${API_BASE}/accounts/${account}/withdraw`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          pin: pin,
+          amount: Number(amount)
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || 'Withdrawal failed');
+    }
+
     const newBalance = Number(data.account.balance);
 
     if (Number.isNaN(newBalance)) {
@@ -93,7 +155,6 @@ const handleWithdraw = async () => {
     }
 
     setBalance(newBalance);
-
     showMessage('success', `Withdrew ₹${amount} successfully!`);
     setAmount('');
     setView('menu');
@@ -106,11 +167,21 @@ const handleWithdraw = async () => {
 
 
 
-  const handleTransfer = async () => {
+
+ const handleTransfer = async () => {
   try {
     const res = await fetch(
-      `${API_BASE}/accounts/${account}/transfer/${toAccount}?pin=${pin}&amount=${Number(amount)}`,
-      { method: 'POST' }
+      `${API_BASE}/accounts/${account}/transfer/${toAccount}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          pin: pin,
+          amount: Number(amount)
+        })
+      }
     );
 
     const data = await res.json();
@@ -119,12 +190,12 @@ const handleWithdraw = async () => {
       throw new Error(data.message || 'Transfer failed');
     }
 
-    // ✅ normalize BigDecimal → JS number
-    const newBalance = Number(data?.account?.balance);
+    // normalize BigDecimal → JS number
+    const newBalance = Number(data?.balance ?? data?.account?.balance);
 
     setBalance(Number.isFinite(newBalance) ? newBalance : 0);
 
-    showMessage('success', `Transferred $${amount} successfully!`);
+    showMessage('success', `Transferred ₹${amount} successfully!`);
     setAmount('');
     setToAccount('');
     setView('menu');
@@ -136,30 +207,37 @@ const handleWithdraw = async () => {
 };
 
 
-  const handleViewTransactions = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/accounts/${account}/transactions?pin=${pin}`);
-      const data = await res.json();
-      if (res.ok) {
-        setTransactions(data);
-        setView('transactions');
-      } else {
-        showMessage('error', 'Failed to load transactions');
-      }
-    } catch (err) {
-      showMessage('error', 'Failed to load transactions');
-    }
-  };
 
-  const handleLogout = () => {
-    setView('login');
-    setAccount('');
-    setPin('');
-    setBalance(null);
-    setTransactions([]);
-    setAmount('');
-    setToAccount('');
-  };
+  const handleViewTransactions = async () => {
+  try {
+    const res = await fetch(
+      `${API_BASE}/accounts/${account}/transactions`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          pin: pin
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to load transactions');
+    }
+
+    setTransactions(data);
+    setView('transactions');
+
+  } catch (err) {
+    console.error(err);
+    showMessage('error', err.message || 'Failed to load transactions');
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 flex items-center justify-center p-4">
@@ -182,7 +260,8 @@ const handleWithdraw = async () => {
 
           {view === 'login' && (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Login to Your Account</h2>
+              <h2 className="text-xl font-semibold mb-4">Welcome</h2>
+
               <input
                 type="text"
                 placeholder="Account Number"
@@ -190,6 +269,7 @@ const handleWithdraw = async () => {
                 value={account}
                 onChange={(e) => setAccount(e.target.value)}
               />
+
               <input
                 type="password"
                 placeholder="PIN"
@@ -197,14 +277,81 @@ const handleWithdraw = async () => {
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
               />
+
               <button
                 onClick={handleLogin}
                 className="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700 font-semibold"
               >
                 Login
               </button>
+
+              <div className="text-center text-sm text-gray-600">
+                Don’t have an account?
+              </div>
+
+              <button
+                onClick={() => setView('signup')}
+                className="w-full border border-blue-600 text-blue-600 p-3 rounded hover:bg-blue-50 font-semibold"
+              >
+                Create New Account
+              </button>
             </div>
           )}
+
+
+          {view === 'signup' && (
+  <div className="space-y-4">
+    <h2 className="text-xl font-semibold">Create Account</h2>
+
+    <input
+      type="text"
+      placeholder="Account Number"
+      value={account}
+      onChange={(e) => setAccount(e.target.value)}
+      className="w-full p-3 border rounded"
+    />
+
+    <input
+      type="text"
+      placeholder="Owner Name"
+      value={ownerName}
+      onChange={(e) => setOwnerName(e.target.value)}
+      className="w-full p-3 border rounded"
+    />
+
+    <input
+      type="password"
+      placeholder="PIN"
+      value={pin}
+      onChange={(e) => setPin(e.target.value)}
+      className="w-full p-3 border rounded"
+    />
+
+    <input
+      type="number"
+      placeholder="Initial Balance"
+      value={initialBalance}
+      onChange={(e) => setInitialBalance(e.target.value)}
+      className="w-full p-3 border rounded"
+    />
+
+    <button
+      onClick={handleSignup}
+      className="w-full bg-green-600 text-white p-3 rounded"
+    >
+      Create Account
+    </button>
+
+    <button
+      onClick={() => setView('login')}
+      className="w-full bg-gray-500 text-white p-3 rounded"
+    >
+      Back to Login
+    </button>
+  </div>
+)}
+
+
 
           {view === 'menu' && (
             <div className="space-y-4">
