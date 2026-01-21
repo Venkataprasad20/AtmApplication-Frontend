@@ -4,6 +4,13 @@ This project is the frontend implementation of an ATM system, developed using HT
 
 The application communicates with a Spring Boot REST API backend to perform all banking operations in real time.
 
+🌐 Deployment
+
+Frontend Hosting: Vercel
+Live Application:
+👉 https://atm-application-frontend.vercel.app
+The frontend is fully deployed and integrated with the live backend, allowing users to experience the complete ATM workflow.
+
 
 🚀 Technologies Used
 
@@ -29,15 +36,6 @@ Purple for transfers
 Real-time balance updates after each transaction
 Responsive design for desktop and mobile devices
 User-friendly and clean UI
-
-
-🌐 Deployment
-
-Frontend Hosting: Vercel
-Live Application:
-👉 https://atm-application-frontend.vercel.app
-The frontend is fully deployed and integrated with the live backend, allowing users to experience the complete ATM workflow.
-
 
 🔗 Backend Integration
 
