@@ -166,18 +166,18 @@ export default function ATMApp() {
   };
 
   const handleLogout = () => {
-  // clear sensitive state
-  setAccount('');
-  setPin('');
-  setBalance(null);
-  setTransactions([]);
-  setAmount('');
-  setToAccount('');
-  setMessage({ type: '', text: '' });
+    // clear sensitive state
+    setAccount('');
+    setPin('');
+    setBalance(null);
+    setTransactions([]);
+    setAmount('');
+    setToAccount('');
+    setMessage({ type: '', text: '' });
 
-  // go back to login screen
-  setView('login');
-};
+    // go back to login screen
+    setView('login');
+  };
 
 
   const handleTransfer = async () => {
@@ -504,26 +504,56 @@ export default function ATMApp() {
           {view === 'transactions' && (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Transaction History</h2>
+
               <div className="max-h-96 overflow-y-auto space-y-2">
                 {transactions.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">No transactions found</p>
+                  <p className="text-gray-500 text-center py-4">
+                    No transactions found
+                  </p>
                 ) : (
-                  transactions.map((txn, idx) => (
-                    <div key={idx} className="bg-gray-50 p-3 rounded border border-gray-200">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold">{txn.type}</p>
-                          <p className="text-sm text-gray-600">{new Date(txn.timestamp).toLocaleString()}</p>
+                  transactions.map((txn, idx) => {
+                    // normalize type
+                    const type = txn.type?.toUpperCase();
+
+                    let color = 'text-gray-600';
+                    let sign = '';
+                    let label = type;
+
+                    if (type === 'DEPOSIT') {
+                      color = 'text-green-600';
+                      sign = '+';
+                    } else if (type === 'WITHDRAW' || type === 'WITHDRAWL') {
+                      color = 'text-red-600';
+                      sign = '-';
+                      label = 'WITHDRAW';
+                    } else if (type === 'TRANSFER') {
+                      color = 'text-purple-600';
+                      sign = '-';
+                    }
+
+                    return (
+                      <div
+                        key={idx}
+                        className="bg-gray-50 p-3 rounded border border-gray-200"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold">{label}</p>
+                            <p className="text-sm text-gray-600">
+                              {new Date(txn.timestamp).toLocaleString()}
+                            </p>
+                          </div>
+
+                          <p className={`font-bold ${color}`}>
+                            {sign}${Number(txn.amount).toFixed(2)}
+                          </p>
                         </div>
-                        <p className={`font-bold ${txn.type === 'DEPOSIT' ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                          {txn.type === 'DEPOSIT' ? '+' : '-'}${txn.amount?.toFixed(2)}
-                        </p>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
+
               <button
                 onClick={() => setView('menu')}
                 className="w-full bg-gray-500 text-white p-3 rounded hover:bg-gray-600"
@@ -532,6 +562,7 @@ export default function ATMApp() {
               </button>
             </div>
           )}
+
         </div>
       </div>
     </div>
